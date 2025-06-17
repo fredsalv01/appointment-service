@@ -11,6 +11,7 @@ export class CreateAppointmentUseCase {
         const appointment = new Appointment(
             uuidv4(),
             input.insuredId,
+            input.scheduleId,
             input.date,
             AppointmentStatusEnum.PENDING,
             input.countryISO

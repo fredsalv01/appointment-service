@@ -5,6 +5,8 @@ import { CreateAppointmentUseCase } from "../../application/createAppointment.us
 import { GetAppointmentsByInsuredIdUseCase } from "../../application/getAppointment.use-case";
 import { CreateAppointmentRequest } from "../../application/dtos/create-appointment-request";
 import { RESPONSE_APPOINTMENT } from "./enum/response-message.enum";
+import { createAppointmentSchema } from "./validator/create-appointment.schema";
+import { z } from "zod";
 
 export async function appointmentRoutes(fastify: FastifyInstance) {
     const repository = new DynamoDbAppointmentRepository();
@@ -15,8 +17,9 @@ export async function appointmentRoutes(fastify: FastifyInstance) {
 
     fastify.post('/appointments', async (request, reply) => {
         try {
-            const { insuredId, date, countryISO } = request.body as CreateAppointmentRequest;
-            const appointment = await createUseCase.execute({insuredId, date, countryISO});
+            const parsed = createAppointmentSchema.parse(request.body);
+            const dto: CreateAppointmentRequest = parsed;
+            const appointment = await createUseCase.execute(dto);
             await publisher.publish(appointment);
             return reply.code(201).send({ message: RESPONSE_APPOINTMENT.CREATE_APPOINTMENT_MESSAGE, data: {
                 appointment_id: appointment.id,
@@ -24,6 +27,9 @@ export async function appointmentRoutes(fastify: FastifyInstance) {
                 appointment_status: appointment.status
             }});
         } catch (error) {
+            if (error instanceof z.ZodError) {
+                return reply.code(400).send({ error: error.flatten() });
+            }
             console.log('🚀 Error al ejecutar el endpoint /appointments', error);
         }
     });

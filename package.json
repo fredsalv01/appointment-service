@@ -23,7 +23,8 @@
     "serverless": "^4.17.0",
     "serverless-offline": "^14.4.0",
     "ts-node": "^10.9.2",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "zod": "^3.25.67"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.150",
