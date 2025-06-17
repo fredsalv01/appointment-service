@@ -1,0 +1,36 @@
+{
+  "name": "appointment-service",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.830.0",
+    "@aws-sdk/client-sns": "^3.830.0",
+    "@aws-sdk/lib-dynamodb": "^3.830.0",
+    "@fastify/aws-lambda": "^5.1.4",
+    "aws-lambda": "^1.0.7",
+    "aws-lambda-fastify": "^2.2.0",
+    "aws-sdk": "^2.1692.0",
+    "express": "^5.1.0",
+    "fastify": "^5.4.0",
+    "serverless": "^4.17.0",
+    "serverless-offline": "^14.4.0",
+    "ts-node": "^10.9.2",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.150",
+    "@types/aws-lambda-fastify": "^1.4.5",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.0.3",
+    "@types/uuid": "^10.0.0",
+    "typescript": "^5.8.3"
+  }
+}

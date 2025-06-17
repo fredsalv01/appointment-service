@@ -1,0 +1,53 @@
+service: appointment-service
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  stage: dev
+
+resources:
+  Resources:
+    AppointmentsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Appointments
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: insuredId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: insuredId-index
+            KeySchema:
+              - AttributeName: insuredId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+plugins:
+  - serverless-offline
+
+package:
+  individually: true
+
+# functions for rds with endpoints
+functions:
+  appointment:
+    handler: src/lambdas/appointment.handler
+    events:
+      - http:
+          path: appointments
+          method: post
+      - http:
+          path: appointments/{insuredId}
+          method: get
+    environment:
+      SNS_TOPIC_PE: arn:aws:sns:us-east-1:123456789012:appointments_PE
+      SNS_TOPIC_CL: arn:aws:sns:us-east-1:123456789012:appointments_CL
+      APPOINTMENTS_TABLE: Appointments
