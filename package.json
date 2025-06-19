@@ -12,7 +12,9 @@
   "description": "",
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.830.0",
+    "@aws-sdk/client-eventbridge": "^3.830.0",
     "@aws-sdk/client-sns": "^3.830.0",
+    "@aws-sdk/client-sqs": "^3.831.0",
     "@aws-sdk/lib-dynamodb": "^3.830.0",
     "@fastify/aws-lambda": "^5.1.4",
     "aws-lambda": "^1.0.7",
@@ -20,6 +22,7 @@
     "aws-sdk": "^2.1692.0",
     "express": "^5.1.0",
     "fastify": "^5.4.0",
+    "mysql2": "^3.14.1",
     "serverless": "^4.17.0",
     "serverless-offline": "^14.4.0",
     "ts-node": "^10.9.2",

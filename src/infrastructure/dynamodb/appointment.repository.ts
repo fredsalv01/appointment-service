@@ -4,6 +4,7 @@ import { AppointmentRepository } from "../../domain/appointment.repository";
 import { DynamoDBRepository } from "./dynamodb.repository";
 import { QueryCommand } from "@aws-sdk/client-dynamodb";
 import { unmarshall } from "@aws-sdk/util-dynamodb";
+import { AppointmentStatusEnum } from "../../domain/enums/appointment-enums";
 
 export class DynamoDbAppointmentRepository extends DynamoDBRepository implements AppointmentRepository {
     constructor() {
@@ -51,17 +52,20 @@ export class DynamoDbAppointmentRepository extends DynamoDBRepository implements
         return Appointment.fromPrimitives(result.Item as any);
     }
 
-    async updateStatus(id: string, status: 'pending' | 'completed'): Promise<void> {
+    async updateStatus(insuredId: string, scheduleId: number, status: AppointmentStatusEnum): Promise<void> {
         await this.client.send(
             new UpdateCommand({
                 TableName: this.tableName,
-                Key: { id },
+                Key: { 
+                    insuredId: { S: insuredId },
+                    scheduleId: { N: scheduleId.toString() },
+                },
                 UpdateExpression: 'SET #s = :status',
                 ExpressionAttributeNames: {
                     '#s': 'status'
                 },
                 ExpressionAttributeValues: {
-                    ':status': status
+                    ':status': { S: status }
                 }
             })
         );

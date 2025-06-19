@@ -9,6 +9,30 @@ provider:
 
 resources:
   Resources:
+    AppointmentConfirmationQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: appointment-confirmation-queue
+    AppointmentConfirmedRule:
+      Type: AWS::Events::Rule
+      Properties:
+        EventPattern:
+          source:
+            - "appointment.service"
+          detail-type:
+            - "AppointmentConfirmed"
+        Targets:
+          - Arn:
+              Fn::GetAtt: [AppointmentConfirmationQueue, Arn]
+            Id: "SendToConfirmationQueue"
+    SQSPEQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: SQS_PE
+    SQSCLQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: SQS_CL
     AppointmentsTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -31,12 +55,23 @@ resources:
               ProjectionType: ALL
 
 plugins:
+  - serverless-esbuild
   - serverless-offline
 
 package:
   individually: true
 
-# functions for rds with endpoints
+custom:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    exclude: ['aws-sdk']
+    target: node18
+    platform: node
+    concurrency: 10
+
+# functions for lambda with endpoints
 functions:
   appointment:
     handler: src/lambdas/appointment.handler
@@ -47,7 +82,31 @@ functions:
       - http:
           path: appointments/{insuredId}
           method: get
+      - sqs:
+          arn:
+            Fn::GetAtt: [AppointmentConfirmationQueue, Arn]
+  appointment_pe:
+    handler: src/lambdas/appointment_pe.handler
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt: [SQSPEQueue, Arn]
+  appointment_pe:
+    handler: src/lambdas/appointment_cl.handler
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt: [SQSCLQueue, Arn]
+
     environment:
       SNS_TOPIC_PE: arn:aws:sns:us-east-1:123456789012:appointments_PE
       SNS_TOPIC_CL: arn:aws:sns:us-east-1:123456789012:appointments_CL
       APPOINTMENTS_TABLE: Appointments
+       RDS_PE_HOST: pe-db.cluster-xxxxx.us-east-1.rds.amazonaws.com
+      RDS_PE_USER: admin
+      RDS_PE_PASSWORD: pe_password
+      RDS_PE_DB: appointments_pe
+      RDS_CL_HOST: cl-db.cluster-yyyyy.us-east-1.rds.amazonaws.com
+      RDS_CL_USER: admin
+      RDS_CL_PASSWORD: cl_password
+      RDS_CL_DB: appointments_cl
