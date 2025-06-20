@@ -1,16 +1,57 @@
 service: appointment-service
-frameworkVersion: '3'
 
 provider:
   name: aws
   runtime: nodejs18.x
   region: us-east-1
   stage: dev
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:GetItem
+        - dynamodb:Query
+      Resource:
+        - arn:aws:dynamodb:${self:provider.region}:*:table/AppointmentTable
+    - Effect: Allow
+      Action:
+        - sns:Publish
+      Resource:
+        - ${self:custom.snsTopicArnPE}
+        - ${self:custom.snsTopicArnCL}
+
+    - Effect: Allow
+      Action:
+        - sqs:SendMessage
+        - sqs:ReceiveMessage
+        - sqs:DeleteMessage
+      Resource:
+        - arn:aws:sqs:${self:provider.region}:*:SQS_PE
+        - arn:aws:sqs:${self:provider.region}:*:SQS_CL
+        - arn:aws:sqs:${self:provider.region}:*:appointment-confirmation-queue
+
+    - Effect: Allow
+      Action:
+        - events:PutEvents
+      Resource: "*"
+
+custom:
+  snsTopicArnPE: arn:aws:sns:us-east-2:029636175630:appointment_PE.fifo
+  snsTopicArnCL: arn:aws:sns:us-east-2:029636175630:appointment_CL.fifo
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    exclude: ['aws-sdk']
+    target: node18
+    platform: node
+    concurrency: 10
+  
+
   environment:
-      SNS_TOPIC_PE: arn:aws:sns:us-east-1:123456789012:appointments_PE
-      SNS_TOPIC_CL: arn:aws:sns:us-east-1:123456789012:appointments_CL
       APPOINTMENTS_TABLE: Appointments
-       RDS_PE_HOST: pe-db.cluster-xxxxx.us-east-1.rds.amazonaws.com
+      RDS_PE_HOST: pe-db.cluster-xxxxx.us-east-1.rds.amazonaws.com
       RDS_PE_USER: admin
       RDS_PE_PASSWORD: pe_password
       RDS_PE_DB: appointments_pe
@@ -25,10 +66,10 @@ functions:
     handler: src/lambdas/appointment.handler
     events:
       - http:
-          path: /appointments
+          path: appointments
           method: post
       - http:
-          path: /appointments/{insuredId}
+          path: appointments/{insuredId}
           method: get
       - sqs:
           arn:
@@ -41,7 +82,7 @@ functions:
           arn:
             Fn::GetAtt: [SQSPEQueue, Arn]
   
-  appointment_pe:
+  appointment_cl:
     handler: src/lambdas/appointment_cl.handler
     events:
       - sqs:
@@ -49,21 +90,12 @@ functions:
             Fn::GetAtt: [SQSCLQueue, Arn]
 
 plugins:
-  - serverless-esbuild
+  # - serverless-esbuild
   - serverless-offline
 
 package:
   individually: true
 
-custom:
-  esbuild:
-    bundle: true
-    minify: false
-    sourcemap: true
-    exclude: ['aws-sdk']
-    target: node18
-    platform: node
-    concurrency: 10
 
 resources:
   Resources:

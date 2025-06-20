@@ -15,6 +15,7 @@ export class AppointmentSNSPublisher extends SNSPublisher {
 
     async publish(appointment: Appointment): Promise<void> {
         const topicArn = this.topicMap[appointment.countryISO];
+        
         if(!topicArn) {
             throw new Error(`No hay topic SNS configurado para el país: ${appointment.countryISO}`);
         }
